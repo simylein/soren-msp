@@ -24,6 +24,10 @@ SECTIONS {
 		KEEP(*(.vectors))
 	} > vect
 
+	.timer_a0 0xffea :{
+		KEEP(*(.timer_a0))
+	} > vect
+
 	.reset 0xfffe :{
 		KEEP(*(.reset))
 	} > vect
