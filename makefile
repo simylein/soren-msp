@@ -36,6 +36,10 @@ flash:
 	@echo "flashing $(target)..."
 	@printf "prog $(target).elf\nverify $(target).elf\n" | mspdebug ezfet
 
+start:
+		@echo "starting $(target)..."
+		@printf "run" | mspdebug ezfet
+
 clean:
 	@echo "cleaning up..."
 	@rm -rf $(obj) $(target).elf
