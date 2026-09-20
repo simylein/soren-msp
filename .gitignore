@@ -1,0 +1,14 @@
+# operating system
+.DS_Store
+
+# vscode
+.vscode
+
+# objects
+obj
+
+# executable
+soren.elf
+
+# logs
+*.log
