@@ -10,9 +10,15 @@ int main() {
 	__asm__ volatile("nop");
 
 	while (1) {
-		gpio_led_on();
+		gpio_led_red_on();
 		timer_sleep_s(1);
-		gpio_led_off();
+		gpio_led_red_off();
+		gpio_led_green_on();
 		timer_sleep_s(1);
+		gpio_led_green_off();
+		gpio_led_blue_on();
+		timer_sleep_s(1);
+		gpio_led_blue_off();
+		timer_sleep_s(4);
 	}
 }
