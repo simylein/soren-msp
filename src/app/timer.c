@@ -1,11 +1,6 @@
 #include "timer.h"
+#include "../lib/msp430fr5994.h"
 #include <stdint.h>
-
-#define ta0ctl (*(volatile unsigned short *)0x0340)
-#define ta0cctl0 (*(volatile unsigned short *)0x0342)
-#define ta0r (*(volatile unsigned short *)0x0350)
-#define ta0ccr0 (*(volatile unsigned short *)0x0352)
-#define ta0ccr1 (*(volatile unsigned short *)0x0354)
 
 #define tassel_1 0x0100
 #define mc_1 0x0010
