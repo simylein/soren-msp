@@ -16,16 +16,19 @@ int main() {
 
 	while (1) {
 		led_red_on();
-		timer_sleep_s(1);
+		timer_sleep_ms(200);
 		led_red_off();
+		timer_sleep_ms(100);
 
 		led_green_on();
-		timer_sleep_s(1);
+		timer_sleep_ms(200);
 		led_green_off();
+		timer_sleep_ms(100);
 
 		led_blue_on();
-		timer_sleep_s(1);
+		timer_sleep_ms(200);
 		led_blue_off();
+		timer_sleep_ms(100);
 
 		timer_sleep_s(4);
 	}
