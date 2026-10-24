@@ -19,9 +19,14 @@
 #define sx1278_reg_fifo_addr_ptr 0x0d
 #define sx1278_reg_fifo_tx_base 0x0e
 #define sx1278_reg_fifo_rx_base 0x0f
+#define sx1278_reg_fifo_rx_current 0x10
 #define sx1278_reg_irq_flags 0x12
+#define sx1278_reg_packet_len 0x13
+#define sx1278_reg_modem_stat 0x18
+#define sx1278_reg_hop_channel 0x1c
 #define sx1278_reg_modem_config_1 0x1d
 #define sx1278_reg_modem_config_2 0x1e
+#define sx1278_reg_symb_timeout_lsb 0x1f
 #define sx1278_reg_preamble_msb 0x20
 #define sx1278_reg_preamble_lsb 0x21
 #define sx1278_reg_payload_len 0x22
@@ -154,6 +159,19 @@ int sx1278_standby(void) {
 int sx1278_tx(void) {
 	uint8_t op_mode = sx1278_read(sx1278_reg_op_mode);
 	op_mode = ((op_mode & ~0x07) | 0x03);
+
+	sx1278_write(sx1278_reg_op_mode, op_mode);
+
+	if (sx1278_read(sx1278_reg_op_mode) != op_mode) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int sx1278_rx(void) {
+	uint8_t op_mode = sx1278_read(sx1278_reg_op_mode);
+	op_mode = ((op_mode & ~0x07) | 0x06);
 
 	sx1278_write(sx1278_reg_op_mode, op_mode);
 
@@ -383,9 +401,77 @@ int sx1278_transmit(uint8_t *data, uint8_t length, uint16_t timeout) {
 		timeout--;
 	}
 
-	sx1278_write(sx1278_reg_irq_flags, 0x08);
+	sx1278_write(sx1278_reg_irq_flags, 0xff);
 
-	if ((sx1278_read(sx1278_reg_irq_flags) & 0x08) != 0x00) {
+	if ((sx1278_read(sx1278_reg_irq_flags) & 0xff) != 0x00) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int sx1278_receive(uint8_t *data, uint8_t *length, uint16_t timeout, bool *crc_used, bool *crc_fail) {
+	if (timeout == 0) {
+		return -1;
+	}
+
+	sx1278_write(sx1278_reg_symb_timeout_lsb, 16);
+
+	if (sx1278_rx() == -1) {
+		return -1;
+	}
+
+	while (true) {
+		uint8_t irq_flags = sx1278_read(sx1278_reg_irq_flags);
+		uint8_t modem_stat = sx1278_read(sx1278_reg_modem_stat);
+		if (irq_flags & 0x80) {
+			return -1;
+		}
+		if (modem_stat & 0x01) {
+			led_green_on();
+			break;
+		}
+		timer_sleep_ms(1);
+	}
+
+	uint8_t irq_flags;
+	while (true) {
+		irq_flags = sx1278_read(sx1278_reg_irq_flags);
+		if (irq_flags & 0x40) {
+			led_green_off();
+			break;
+		}
+		if (timeout == 0) {
+			led_green_off();
+			return -1;
+		}
+		timer_sleep_ms(1);
+		timeout--;
+	}
+
+	uint8_t hop_channel = sx1278_read(sx1278_reg_hop_channel);
+
+	if (hop_channel & 0x40) {
+		*crc_used = true;
+	}
+
+	if (irq_flags & 0x20) {
+		*crc_fail = true;
+	}
+
+	uint8_t rx_addr = sx1278_read(sx1278_reg_fifo_rx_current);
+
+	sx1278_write(sx1278_reg_fifo_addr_ptr, rx_addr);
+
+	*length = sx1278_read(sx1278_reg_packet_len);
+
+	for (uint8_t index = 0; index < *length; index++) {
+		data[index] = sx1278_read(sx1278_reg_fifo);
+	}
+
+	sx1278_write(sx1278_reg_irq_flags, 0xff);
+
+	if ((sx1278_read(sx1278_reg_irq_flags) & 0xff) != 0x00) {
 		return -1;
 	}
 

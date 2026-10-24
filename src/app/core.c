@@ -55,5 +55,18 @@ int transceive(config_t *config) {
 
 	config->frame += 1;
 
+	uint8_t rx_data[256];
+	uint8_t rx_data_len = 0;
+	bool crc_used = false;
+	bool crc_fail = false;
+
+	if (sx1278_receive(rx_data, &rx_data_len, 512, &crc_used, &crc_fail) == -1) {
+		return -1;
+	}
+
+	if (crc_used == true && crc_fail == true) {
+		return -1;
+	}
+
 	return 0;
 }
