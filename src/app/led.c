@@ -39,3 +39,21 @@ void led_blue_blink(uint16_t on, uint16_t off) {
 	led_blue_off();
 	timer_sleep_ms(off);
 }
+
+void led_byte_blink(uint8_t value) {
+	led_blue_blink(800, 200);
+
+	for (uint8_t i = 0; i < 8; i++) {
+		if (value & 0x80) {
+			led_green_blink(800, 200);
+		} else {
+			led_red_blink(800, 200);
+		}
+
+		value <<= 1;
+	}
+
+	led_blue_blink(800, 200);
+
+	timer_sleep_s(2);
+}
