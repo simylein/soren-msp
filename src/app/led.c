@@ -8,8 +8,8 @@
 #define led_blue 0x02
 
 void led_init(void) {
-	p8dir |= 0x0e;
-	p8out |= 0x0e;
+	p8out |= (led_red | led_green | led_blue);
+	p8dir |= (led_red | led_green | led_blue);
 }
 
 void led_red_on(void) { p8out &= ~led_red; }
