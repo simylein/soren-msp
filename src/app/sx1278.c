@@ -1,4 +1,5 @@
 #include "../lib/msp430fr5994.h"
+#include "led.h"
 #include "math.h"
 #include "timer.h"
 #include <stdbool.h>
@@ -9,13 +10,20 @@
 #define spi_mosi 0x02
 #define spi_miso 0x01
 
+#define sx1278_reg_fifo 0x00
 #define sx1278_reg_op_mode 0x01
 #define sx1278_reg_frf_msb 0x06
 #define sx1278_reg_frf_mid 0x07
 #define sx1278_reg_frf_lsb 0x08
 #define sx1278_reg_pa_config 0x09
+#define sx1278_reg_fifo_addr_ptr 0x0d
+#define sx1278_reg_fifo_tx_base 0x0e
+#define sx1278_reg_fifo_rx_base 0x0f
+#define sx1278_reg_irq_flags 0x12
 #define sx1278_reg_modem_config_1 0x1d
 #define sx1278_reg_modem_config_2 0x1e
+#define sx1278_reg_payload_len 0x22
+#define sx1278_reg_sync_word 0x39
 #define sx1278_reg_version 0x42
 
 uint8_t spi_transfer(uint8_t data) {
@@ -139,6 +147,33 @@ int sx1278_standby(void) {
 	}
 
 	return -1;
+}
+
+int sx1278_tx(void) {
+	uint8_t op_mode = sx1278_read(sx1278_reg_op_mode);
+	op_mode = (uint8_t)((op_mode & ~0x07) | 0x03);
+
+	sx1278_write(sx1278_reg_op_mode, op_mode);
+
+	if (sx1278_read(sx1278_reg_op_mode) != op_mode) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int sx1278_fifo(void) {
+	sx1278_write(sx1278_reg_fifo_tx_base, 0x00);
+	sx1278_write(sx1278_reg_fifo_rx_base, 0x00);
+
+	if (sx1278_read(sx1278_reg_fifo_tx_base) != 0x00) {
+		return -1;
+	}
+	if (sx1278_read(sx1278_reg_fifo_rx_base) != 0x00) {
+		return -1;
+	}
+
+	return 0;
 }
 
 int sx1278_frequency(uint32_t frequency) {
@@ -277,6 +312,57 @@ int sx1278_checksum(bool crc) {
 	sx1278_write(sx1278_reg_modem_config_2, modem_config_2);
 
 	if (sx1278_read(sx1278_reg_modem_config_2) != modem_config_2) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int sx1278_sync_word(uint8_t word) {
+	sx1278_write(sx1278_reg_sync_word, word);
+
+	if (sx1278_read(sx1278_reg_sync_word) != word) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int sx1278_transmit(uint8_t *data, uint8_t length, uint16_t timeout) {
+	if (timeout == 0) {
+		return -1;
+	}
+
+	sx1278_write(sx1278_reg_fifo_addr_ptr, 0x00);
+
+	for (uint8_t index = 0; index < length; index++) {
+		sx1278_write(sx1278_reg_fifo, data[index]);
+	}
+
+	sx1278_write(sx1278_reg_payload_len, length);
+
+	if (sx1278_tx() == -1) {
+		return -1;
+	}
+
+	led_blue_on();
+	while (true) {
+		uint8_t irq_flags = sx1278_read(sx1278_reg_irq_flags);
+		if (irq_flags & 0x08) {
+			led_blue_off();
+			break;
+		}
+		if (timeout == 0) {
+			led_blue_off();
+			return -1;
+		}
+		timer_sleep_ms(1);
+		timeout--;
+	}
+
+	sx1278_write(sx1278_reg_irq_flags, 0x08);
+
+	if ((sx1278_read(sx1278_reg_irq_flags) & 0x08) != 0x00) {
 		return -1;
 	}
 

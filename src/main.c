@@ -34,6 +34,9 @@ int main(void) {
 		if (sx1278_standby() == -1) {
 			led_red_blink(500, 500);
 		}
+		if (sx1278_fifo() == -1) {
+			led_red_blink(500, 500);
+		}
 
 		if (sx1278_frequency(433225000) == -1) {
 			led_red_blink(500, 500);
@@ -51,6 +54,21 @@ int main(void) {
 			led_red_blink(500, 500);
 		}
 		if (sx1278_tx_power(2) == -1) {
+			led_red_blink(500, 500);
+		}
+		if (sx1278_sync_word(0x26) == -1) {
+			led_red_blink(500, 500);
+		}
+
+		uint8_t tx_data[6];
+		uint8_t tx_data_len = 6;
+		tx_data[0] = 0xbe;
+		tx_data[1] = 0xef;
+		tx_data[2] = 0x00;
+		tx_data[3] = 0x00;
+		tx_data[4] = 0x00;
+		tx_data[5] = 0x00;
+		if (sx1278_transmit(tx_data, tx_data_len, 512) == -1) {
 			led_red_blink(500, 500);
 		}
 
