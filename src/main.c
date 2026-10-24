@@ -7,6 +7,8 @@
 #include <stdint.h>
 
 int main(void) {
+	msp430_clock_8mhz();
+
 	timer_init();
 	led_init();
 	sx1278_init();

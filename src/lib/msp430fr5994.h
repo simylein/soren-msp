@@ -2,6 +2,9 @@
 
 #define pm5ctl0 (*(volatile unsigned char *)0x0130)
 
+#define csctl0 (*(volatile unsigned char *)0x0161)
+#define csctl3 (*(volatile unsigned short *)0x0166)
+
 #define p6in (*(volatile unsigned char *)0x0241)
 #define p6out (*(volatile unsigned char *)0x0243)
 #define p6dir (*(volatile unsigned char *)0x0245)
