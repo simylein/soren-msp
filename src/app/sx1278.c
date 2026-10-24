@@ -22,6 +22,8 @@
 #define sx1278_reg_irq_flags 0x12
 #define sx1278_reg_modem_config_1 0x1d
 #define sx1278_reg_modem_config_2 0x1e
+#define sx1278_reg_preamble_msb 0x20
+#define sx1278_reg_preamble_lsb 0x21
 #define sx1278_reg_payload_len 0x22
 #define sx1278_reg_sync_word 0x39
 #define sx1278_reg_version 0x42
@@ -151,7 +153,7 @@ int sx1278_standby(void) {
 
 int sx1278_tx(void) {
 	uint8_t op_mode = sx1278_read(sx1278_reg_op_mode);
-	op_mode = (uint8_t)((op_mode & ~0x07) | 0x03);
+	op_mode = ((op_mode & ~0x07) | 0x03);
 
 	sx1278_write(sx1278_reg_op_mode, op_mode);
 
@@ -209,6 +211,27 @@ int sx1278_tx_power(uint8_t power) {
 	sx1278_write(sx1278_reg_pa_config, pa_config);
 
 	if (sx1278_read(sx1278_reg_pa_config) != pa_config) {
+		return -1;
+	}
+
+	return 0;
+}
+
+int sx1278_preamble_length(uint16_t len) {
+	if (len < 6 || len > 21) {
+		return -1;
+	}
+
+	uint8_t msb = ((len >> 8) & 0xff);
+	uint8_t lsb = ((len >> 0) & 0xff);
+
+	sx1278_write(sx1278_reg_preamble_msb, msb);
+	sx1278_write(sx1278_reg_preamble_lsb, lsb);
+
+	if (sx1278_read(sx1278_reg_preamble_msb) != msb) {
+		return -1;
+	}
+	if (sx1278_read(sx1278_reg_preamble_lsb) != lsb) {
 		return -1;
 	}
 
