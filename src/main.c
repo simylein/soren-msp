@@ -5,14 +5,14 @@
 #define locklpm5 0x01
 
 int main() {
+	__asm__ volatile("nop");
+	__asm__ volatile("eint");
+	__asm__ volatile("nop");
+
 	pm5ctl0 &= ~locklpm5;
 
 	timer_init();
 	led_init();
-
-	__asm__ volatile("nop");
-	__asm__ volatile("eint");
-	__asm__ volatile("nop");
 
 	led_green_blink(200, 100);
 	led_green_blink(200, 100);
