@@ -1,3 +1,5 @@
+#pragma once
+
 #define pm5ctl0 (*(volatile unsigned char *)0x0130)
 
 #define p8out (*(volatile unsigned char *)0x0263)

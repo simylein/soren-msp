@@ -14,21 +14,17 @@ int main() {
 	__asm__ volatile("eint");
 	__asm__ volatile("nop");
 
+	led_green_blink(200, 100);
+	led_green_blink(200, 100);
+	led_green_blink(200, 100);
+	led_green_blink(200, 100);
+
+	timer_sleep_s(1);
+
 	while (1) {
-		led_red_on();
-		timer_sleep_ms(200);
-		led_red_off();
-		timer_sleep_ms(100);
-
-		led_green_on();
-		timer_sleep_ms(200);
-		led_green_off();
-		timer_sleep_ms(100);
-
-		led_blue_on();
-		timer_sleep_ms(200);
-		led_blue_off();
-		timer_sleep_ms(100);
+		led_red_blink(200, 100);
+		led_green_blink(200, 100);
+		led_blue_blink(200, 100);
 
 		timer_sleep_s(4);
 	}
