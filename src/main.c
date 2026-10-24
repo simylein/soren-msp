@@ -1,18 +1,13 @@
 #include "app/led.h"
+#include "app/msp430.h"
 #include "app/timer.h"
-#include "lib/msp430fr5994.h"
 
-#define locklpm5 0x01
-
-int main() {
-	__asm__ volatile("nop");
-	__asm__ volatile("eint");
-	__asm__ volatile("nop");
-
-	pm5ctl0 &= ~locklpm5;
-
+int main(void) {
 	timer_init();
 	led_init();
+
+	msp430_gpio_unlock();
+	msp430_interrupts_enable();
 
 	led_green_blink(200, 100);
 	led_green_blink(200, 100);
