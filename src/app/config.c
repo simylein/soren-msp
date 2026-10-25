@@ -1,0 +1,95 @@
+#include "config.h"
+#include "../lib/msp430fr5994.h"
+#include <stdbool.h>
+#include <stdint.h>
+
+bool config_read_bool(uint8_t *index) { return (&framcfg)[(*index)++]; }
+
+uint8_t config_read_uint8(uint8_t *index) { return (&framcfg)[(*index)++]; }
+
+uint16_t config_read_uint16(uint8_t *index) {
+	uint16_t value = 0;
+
+	for (uint8_t i = 0; i < sizeof(uint16_t); i++) {
+		value = (value << 8) | (&framcfg)[(*index)++];
+	}
+
+	return value;
+}
+
+uint32_t config_read_uint32(uint8_t *index) {
+	uint16_t high = config_read_uint16(index);
+	uint16_t low = config_read_uint16(index);
+
+	return ((uint32_t)high << 16) | low;
+}
+
+void config_read_blob(uint8_t *val, uint8_t len, uint8_t *index) {
+	for (uint8_t ind = 0; ind < len; ind++) {
+		val[ind] = (&framcfg)[(*index)++];
+	}
+}
+
+void config_write_bool(bool val, uint8_t *index) { (&framcfg)[(*index)++] = val; }
+
+void config_write_uint8(uint8_t val, uint8_t *index) { (&framcfg)[(*index)++] = val; }
+
+void config_write_uint16(uint16_t val, uint8_t *index) {
+	(&framcfg)[(*index)++] = val >> 8;
+	(&framcfg)[(*index)++] = val >> 0;
+}
+
+void config_write_uint32(uint32_t val, uint8_t *index) {
+	config_write_uint16(val >> 16, index);
+	config_write_uint16(val, index);
+}
+
+void config_write_blob(uint8_t *val, uint8_t len, uint8_t *index) {
+	for (uint8_t ind = 0; ind < len; ind++) {
+		(&framcfg)[(*index)++] = val[ind];
+	}
+}
+
+void config_read(config_t *config) {
+	uint8_t index = 0;
+
+	config_read_blob(config->id, sizeof(config->id), &index);
+	config_read_blob(config->key, sizeof(config->key), &index);
+	config_read_blob(config->firmware, sizeof(config->firmware), &index);
+	config_read_blob(config->hardware, sizeof(config->hardware), &index);
+
+	config->led_red = config_read_bool(&index);
+	config->led_green = config_read_bool(&index);
+	config->led_blue = config_read_bool(&index);
+
+	config->frequency = config_read_uint32(&index);
+	config->bandwidth = config_read_uint32(&index);
+	config->coding_rate = config_read_uint8(&index);
+	config->spreading_factor = config_read_uint8(&index);
+	config->preamble_length = config_read_uint8(&index);
+	config->checksum = config_read_bool(&index);
+	config->tx_power = config_read_uint8(&index);
+	config->sync_word = config_read_uint8(&index);
+}
+
+void config_write(config_t *config) {
+	uint8_t index = 0;
+
+	config_write_blob(config->id, sizeof(config->id), &index);
+	config_write_blob(config->key, sizeof(config->key), &index);
+	config_write_blob(config->firmware, sizeof(config->firmware), &index);
+	config_write_blob(config->hardware, sizeof(config->hardware), &index);
+
+	config_write_bool(config->led_red, &index);
+	config_write_bool(config->led_green, &index);
+	config_write_bool(config->led_blue, &index);
+
+	config_write_uint32(config->frequency, &index);
+	config_write_uint32(config->bandwidth, &index);
+	config_write_uint8(config->coding_rate, &index);
+	config_write_uint8(config->spreading_factor, &index);
+	config_write_uint8(config->preamble_length, &index);
+	config_write_bool(config->checksum, &index);
+	config_write_uint8(config->tx_power, &index);
+	config_write_uint8(config->sync_word, &index);
+}

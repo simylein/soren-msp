@@ -1,14 +1,16 @@
 MEMORY {
-	fram (rx)  : ORIGIN = 0x4000, LENGTH = 0xc000
-	ram  (rwx) : ORIGIN = 0x1c00, LENGTH = 0x2000
-	vect (rx)  : ORIGIN = 0xff80, LENGTH = 0x80
+	firmware (rx) : ORIGIN = 0x4000, LENGTH = 0x4000
+	ram (rwx) : ORIGIN = 0x1c00, LENGTH = 0x2000
+	fram (rw) : ORIGIN = 0x8000, LENGTH = 0x7f00
+	config (rw) : ORIGIN = 0xff00, LENGTH = 0x80
+	vect (rx) : ORIGIN = 0xff80, LENGTH = 0x80
 }
 
 SECTIONS {
 	.text :{
 		*(.text*)
 		*(.rodata*)
-	} > fram
+	} > firmware
 
 	.data :{
 		*(.data*)

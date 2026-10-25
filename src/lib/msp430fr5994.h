@@ -29,3 +29,5 @@
 #define adc12ifgr0 (*(volatile unsigned short *)0x080c)
 #define adc12mctl0 (*(volatile unsigned short *)0x0820)
 #define adc12mem0 (*(volatile unsigned short *)0x0860)
+
+#define framcfg (*(volatile unsigned char *)0xff00)

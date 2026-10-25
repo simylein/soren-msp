@@ -1,4 +1,5 @@
 #include "app/adc49.h"
+#include "app/config.h"
 #include "app/core.h"
 #include "app/led.h"
 #include "app/msp430.h"
@@ -31,25 +32,8 @@ int main(void) {
 	}
 
 	config_t config;
+	config_read(&config);
 	config.frame = 0;
-
-	config.id[0] = 0xbe;
-	config.id[1] = 0xef;
-	config.firmware[0] = 0x00;
-	config.firmware[1] = 0x20;
-	config.hardware[0] = 0x00;
-	config.hardware[1] = 0x30;
-	config.led_red = true;
-	config.led_green = true;
-	config.led_blue = true;
-	config.frequency = 433225000;
-	config.bandwidth = 125000;
-	config.coding_rate = 5;
-	config.spreading_factor = 7;
-	config.preamble_length = 6;
-	config.checksum = true;
-	config.tx_power = 2;
-	config.sync_word = 0x26;
 
 	if (sx1278_lora() == -1) {
 		led_red_blink(200, 100);

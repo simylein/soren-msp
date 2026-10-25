@@ -1,4 +1,5 @@
 #include "core.h"
+#include "config.h"
 #include "sx1278.h"
 #include <stdint.h>
 #include <string.h>
