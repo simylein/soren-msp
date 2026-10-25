@@ -73,5 +73,13 @@ int transceive(config_t *config, uplink_t *uplink) {
 		return -1;
 	}
 
+	if (rx_data_len < 6) {
+		return -1;
+	}
+
+	if (rx_data[0] != config->id[0] || rx_data[1] != config->id[1]) {
+		return -1;
+	}
+
 	return 0;
 }
