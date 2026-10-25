@@ -32,7 +32,7 @@ int configure(config_t *config) {
 	return 0;
 }
 
-int transceive(config_t *config) {
+int transceive(config_t *config, uplink_t *uplink) {
 	uint8_t tx_data[256];
 	uint8_t tx_data_len = 0;
 
@@ -46,8 +46,13 @@ int transceive(config_t *config) {
 	tx_data_len += sizeof(tx_data[tx_data_len]);
 	tx_data[tx_data_len] = ((config->tx_power - 2) << 4) & 0xf0 | ((config->preamble_length - 6) & 0x0f);
 	tx_data_len += sizeof(tx_data[tx_data_len]);
-	tx_data[5] = 0x00;
+	tx_data[tx_data_len] = uplink->kind;
 	tx_data_len += sizeof(tx_data[tx_data_len]);
+
+	for (uint8_t index = 0; index < uplink->data_len; index++) {
+		tx_data[tx_data_len] = uplink->data[index];
+		tx_data_len += sizeof(tx_data[tx_data_len]);
+	}
 
 	if (sx1278_transmit(tx_data, tx_data_len, 512) == -1) {
 		return -1;

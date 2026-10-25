@@ -1,3 +1,4 @@
+#include "app/adc49.h"
 #include "app/core.h"
 #include "app/led.h"
 #include "app/msp430.h"
@@ -11,6 +12,7 @@ int main(void) {
 
 	timer_init();
 	led_init();
+	adc49_init();
 	sx1278_init();
 
 	msp430_gpio_unlock();
@@ -66,10 +68,22 @@ int main(void) {
 	}
 
 	while (true) {
+		uint16_t photovoltaic = adc49_photovoltaic();
+		uint16_t battery = adc49_battery();
+
+		uplink_t uplink;
+		uplink.kind = 0x12;
+
+		uplink.data[0] = ((photovoltaic >> 4) & 0xff);
+		uplink.data[1] = ((photovoltaic & 0x0f) << 4) | ((battery >> 8) & 0x0f);
+		uplink.data[2] = ((battery >> 0) & 0xff);
+
+		uplink.data_len = 3;
+
 		if (sx1278_standby() == -1) {
 			led_red_blink(200, 100);
 		}
-		if (transceive(&config) == -1) {
+		if (transceive(&config, &uplink) == -1) {
 			led_red_blink(200, 100);
 		}
 		if (sx1278_sleep() == -1) {
