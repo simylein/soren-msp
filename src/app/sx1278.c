@@ -197,6 +197,13 @@ int sx1278_fifo(void) {
 }
 
 int sx1278_frequency(uint32_t frequency) {
+	if (frequency < 420000000) {
+		frequency = 420000000;
+	}
+	if (frequency > 440000000) {
+		frequency = 440000000;
+	}
+
 	uint32_split_t frf;
 	frf.value = calculate_frf(frequency);
 
@@ -236,8 +243,11 @@ int sx1278_tx_power(uint8_t power) {
 }
 
 int sx1278_preamble_length(uint16_t len) {
-	if (len < 6 || len > 21) {
-		return -1;
+	if (len < 6) {
+		len = 6;
+	}
+	if (len > 21) {
+		len = 21;
 	}
 
 	uint8_t msb = ((len >> 8) & 0xff);
