@@ -23,6 +23,17 @@
 #define ta0ccr0 (*(volatile unsigned short *)0x0352)
 #define ta0ccr1 (*(volatile unsigned short *)0x0354)
 
+#define rtcctl0 (*(volatile unsigned short *)0x04a0)
+#define rtcctl1 (*(volatile unsigned char *)0x04a2)
+
+#define rtcps0ctl (*(volatile unsigned short *)0x04a8)
+#define rtcps1ctl (*(volatile unsigned short *)0x04aa)
+
+#define rtccnt1 (*(volatile unsigned char *)0x04b0)
+#define rtccnt2 (*(volatile unsigned char *)0x04b1)
+#define rtccnt3 (*(volatile unsigned char *)0x04b2)
+#define rtccnt4 (*(volatile unsigned char *)0x04b3)
+
 #define adc12ctl0 (*(volatile unsigned short *)0x0800)
 #define adc12ctl1 (*(volatile unsigned short *)0x0802)
 #define adc12ctl2 (*(volatile unsigned short *)0x0804)

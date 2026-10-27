@@ -3,6 +3,7 @@
 #include "app/core.h"
 #include "app/led.h"
 #include "app/msp430.h"
+#include "app/rtc.h"
 #include "app/sx1278.h"
 #include "app/timer.h"
 #include <stdbool.h>
@@ -11,6 +12,7 @@
 int main(void) {
 	msp430_clock_8mhz();
 
+	rtc_init();
 	timer_init();
 	led_init();
 	adc49_init();
@@ -18,6 +20,12 @@ int main(void) {
 
 	msp430_gpio_unlock();
 	msp430_interrupts_enable();
+
+	if (rtc_seconds() == 0) {
+		led_green_blink(200, 100);
+	} else {
+		led_red_blink(200, 100);
+	}
 
 	if (sx1278_sleep() == 0) {
 		led_green_blink(200, 100);
