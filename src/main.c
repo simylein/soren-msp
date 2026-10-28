@@ -93,7 +93,6 @@ int main(void) {
 			goto sleep;
 		}
 
-		timer_sleep_ms(20);
 		if (buffer.size > 0) {
 			entry_t entry;
 			if (buffer_peek(&entry) == -1) {
