@@ -71,6 +71,8 @@ void config_read(config_t *config) {
 	config->metric_interval = config_read_uint8(&index);
 	config->buffer_enable = config_read_bool(&index);
 	config->buffer_interval = config_read_uint8(&index);
+	config->live_batch = config_read_uint8(&index);
+	config->buffer_batch = config_read_uint8(&index);
 
 	config->frequency = config_read_uint32(&index);
 	config->bandwidth = config_read_uint32(&index);
@@ -103,6 +105,8 @@ void config_write(config_t *config) {
 	config_write_uint8(config->metric_interval, &index);
 	config_write_bool(config->buffer_enable, &index);
 	config_write_uint8(config->buffer_interval, &index);
+	config_write_uint8(config->live_batch, &index);
+	config_write_uint8(config->buffer_batch, &index);
 
 	config_write_uint32(config->frequency, &index);
 	config_write_uint32(config->bandwidth, &index);
@@ -124,6 +128,14 @@ int config_validate(config_t *config) {
 	}
 
 	if (config->buffer_interval < 5 || config->buffer_interval > 240) {
+		return -1;
+	}
+
+	if (config->live_batch < 1 || config->live_batch > 4) {
+		return -1;
+	}
+
+	if (config->buffer_batch < 1 || config->buffer_batch > 4) {
 		return -1;
 	}
 

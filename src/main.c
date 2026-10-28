@@ -43,6 +43,8 @@ int main(void) {
 		config.metric_interval = 60;
 		config.buffer_enable = true;
 		config.buffer_interval = 30;
+		config.live_batch = 1;
+		config.buffer_batch = 1;
 		config.frequency = 433225000;
 		config.bandwidth = 125000;
 		config.coding_rate = 5;
@@ -91,48 +93,91 @@ int main(void) {
 	uint16_t next_metric = 0;
 	uint16_t next_buffer = 0;
 
+	entry_t stash[4];
+	uint8_t stash_len = 0;
 	while (true) {
 		bool do_reading = next_reading == 0 && config.reading_enable == true;
 		bool do_metric = next_metric == 0 && config.metric_enable == true;
 		bool do_buffer = next_buffer == 0 && config.buffer_enable == true;
 
 		uint32_split_t timestamp = {.value = rtc_seconds()};
-		entry_t entry = {.flags = 0x00, .timestamp = timestamp};
 
-		if (do_metric == true) {
-			entry.flags |= 0x02;
-			entry.photovoltaic = adc49_photovoltaic();
-			entry.battery = adc49_battery();
-		}
+		if (do_reading || do_metric) {
+			entry_t entry = {.flags = 0x00, .timestamp = timestamp};
 
-		uplink_t uplink;
-		encode(&entry, &uplink);
-
-		if (sx1278_standby() == -1) {
-			led_red_blink(200, 100);
-		}
-
-		if (transceive(&config, &uplink) == -1) {
-			acknowledged = false;
-			buffer_push(&entry);
-			led_red_blink(200, 100);
-			goto sleep;
-		}
-		acknowledged = true;
-
-		if (do_buffer == true && buffer.size > 0) {
-			entry_t entry;
-			if (buffer_peek(&entry) == -1) {
-				goto sleep;
+			if (do_reading == true) {
+				entry.flags |= 0x01;
 			}
 
-			uint32_split_t diff = {.value = timestamp.value - entry.timestamp.value};
+			if (do_metric == true) {
+				entry.flags |= 0x02;
+				entry.photovoltaic = adc49_photovoltaic();
+				entry.battery = adc49_battery();
+			}
+
+			stash[stash_len++] = entry;
+		}
+
+		if (stash_len >= config.live_batch) {
+			uint8_t offset = 0;
+
+			while (offset < stash_len) {
+				uplink_t uplink;
+				uint8_t encoded = encode(&stash[offset], stash_len - offset, &uplink);
+
+				uint32_t diff = timestamp.value - stash[offset + encoded - 1].timestamp.value;
+				if (diff > 0) {
+					for (uint8_t index = offset; index < stash_len; index++) {
+						buffer_push(&stash[index]);
+					}
+					stash_len = 0;
+					goto sleep;
+				}
+
+				if (sx1278_standby() == -1) {
+					led_red_blink(200, 100);
+				}
+
+				if (transceive(&config, &uplink) == -1) {
+					acknowledged = false;
+					for (uint8_t index = offset; index < stash_len; index++) {
+						buffer_push(&stash[index]);
+					}
+					stash_len = 0;
+
+					led_red_blink(200, 100);
+					goto sleep;
+				}
+
+				offset += encoded;
+			}
+
+			stash_len = 0;
+			acknowledged = true;
+		}
+
+		if (do_buffer == true && acknowledged == true && buffer.size >= config.buffer_batch) {
+			entry_t entries[4];
+			uint8_t entries_len = 0;
+
+			for (uint8_t index = 0; index < config.buffer_batch && index < buffer.size; index++) {
+				if (buffer_peek(index, &entries[index]) == -1) {
+					goto sleep;
+				}
+
+				entries_len++;
+			}
+
+			uplink_t uplink;
+			uint8_t encoded = encode(entries, entries_len, &uplink);
+
+			uint32_split_t diff = {.value = timestamp.value - entries[encoded - 1].timestamp.value};
 			if (diff.value > 16777215) {
-				buffer_pull();
+				for (uint8_t index = 0; index < encoded; index++) {
+					buffer_pull();
+				}
 				goto sleep;
 			}
-
-			encode(&entry, &uplink);
 
 			uplink.kind |= 0x80;
 			uplink.data[uplink.data_len] = diff.bytes[2];
@@ -146,12 +191,18 @@ int main(void) {
 			uplink.data[uplink.data_len] = (buffer.size >> 0) & 0xff;
 			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
 
+			if (sx1278_standby() == -1) {
+				led_red_blink(200, 100);
+			}
+
 			if (transceive(&config, &uplink) == -1) {
 				led_red_blink(200, 100);
 				goto sleep;
 			}
 
-			buffer_pull();
+			for (uint8_t index = 0; index < encoded; index++) {
+				buffer_pull();
+			}
 		}
 
 	sleep:

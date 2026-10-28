@@ -23,5 +23,5 @@ extern buffer_t buffer;
 void buffer_init(void);
 
 int buffer_push(entry_t *entry);
-int buffer_peek(entry_t *entry);
+int buffer_peek(uint8_t offset, entry_t *entry);
 int buffer_pull(void);

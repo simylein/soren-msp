@@ -21,6 +21,8 @@ typedef struct config_t {
 	uint8_t metric_interval;
 	bool buffer_enable;
 	uint8_t buffer_interval;
+	uint8_t live_batch;
+	uint8_t buffer_batch;
 	uint32_t frequency;
 	uint32_t bandwidth;
 	uint8_t coding_rate;

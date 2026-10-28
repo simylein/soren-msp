@@ -46,12 +46,12 @@ int buffer_push(entry_t *entry) {
 	return status;
 }
 
-int buffer_peek(entry_t *entry) {
-	if (buffer.size == 0) {
+int buffer_peek(uint8_t offset, entry_t *entry) {
+	if (offset >= buffer.size) {
 		return -1;
 	}
 
-	uint16_t index = buffer.head * entry_len;
+	uint16_t index = ((buffer.head + offset) % buffer_len) * entry_len;
 
 	if (((&framstrg)[index] & 0xf0) != 0x50) {
 		return -1;
