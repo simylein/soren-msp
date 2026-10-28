@@ -10,8 +10,17 @@ typedef struct config_t {
 	uint8_t firmware[2];
 	uint8_t hardware[2];
 	bool led_red;
+	bool led_yellow;
 	bool led_green;
+	bool led_cyan;
 	bool led_blue;
+	bool led_purple;
+	bool reading_enable;
+	uint8_t reading_interval;
+	bool metric_enable;
+	uint8_t metric_interval;
+	bool buffer_enable;
+	uint8_t buffer_interval;
 	uint32_t frequency;
 	uint32_t bandwidth;
 	uint8_t coding_rate;

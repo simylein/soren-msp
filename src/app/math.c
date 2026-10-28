@@ -1,4 +1,19 @@
 #include "math.h"
+#include <stdint.h>
+
+uint16_t min16(uint16_t alpha, uint16_t bravo) {
+	if (alpha < bravo) {
+		return alpha;
+	}
+	return bravo;
+}
+
+uint16_t sub16(uint16_t alpha, uint16_t bravo) {
+	if (alpha < bravo) {
+		return 0;
+	}
+	return alpha - bravo;
+}
 
 const uint8_t bit_masks[8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 

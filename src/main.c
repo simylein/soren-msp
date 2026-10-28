@@ -5,6 +5,7 @@
 #include "app/led.h"
 #include "app/math.h"
 #include "app/msp430.h"
+#include "app/proto.h"
 #include "app/rtc.h"
 #include "app/sx1278.h"
 #include "app/timer.h"
@@ -36,6 +37,12 @@ int main(void) {
 	if (config_validate(&config) == 0) {
 		led_green_blink(200, 100);
 	} else if (config.id[0] == 0xff && config.id[1] == 0xff) {
+		config.reading_enable = true;
+		config.reading_interval = 60;
+		config.metric_enable = true;
+		config.metric_interval = 60;
+		config.buffer_enable = true;
+		config.buffer_interval = 30;
 		config.frequency = 433225000;
 		config.bandwidth = 125000;
 		config.coding_rate = 5;
@@ -78,38 +85,42 @@ int main(void) {
 		led_red_blink(200, 100);
 	}
 
-	while (true) {
-		uint32_split_t timestamp = {.value = rtc_seconds()};
+	bool acknowledged = false;
 
-		uint16_t photovoltaic = adc49_photovoltaic();
-		uint16_t battery = adc49_battery();
+	uint16_t next_reading = 0;
+	uint16_t next_metric = 0;
+	uint16_t next_buffer = 0;
+
+	while (true) {
+		bool do_reading = next_reading == 0 && config.reading_enable == true;
+		bool do_metric = next_metric == 0 && config.metric_enable == true;
+		bool do_buffer = next_buffer == 0 && config.buffer_enable == true;
+
+		uint32_split_t timestamp = {.value = rtc_seconds()};
+		entry_t entry = {.flags = 0x00, .timestamp = timestamp};
+
+		if (do_metric == true) {
+			entry.flags |= 0x02;
+			entry.photovoltaic = adc49_photovoltaic();
+			entry.battery = adc49_battery();
+		}
 
 		uplink_t uplink;
-		uplink.kind = 0x12;
-
-		uplink.data[0] = ((photovoltaic >> 4) & 0xff);
-		uplink.data[1] = ((photovoltaic & 0x0f) << 4) | ((battery >> 8) & 0x0f);
-		uplink.data[2] = ((battery >> 0) & 0xff);
-
-		uplink.data_len = 3;
+		encode(&entry, &uplink);
 
 		if (sx1278_standby() == -1) {
 			led_red_blink(200, 100);
 		}
 
 		if (transceive(&config, &uplink) == -1) {
-			entry_t entry = {
-					.flags = 0x01,
-					.photovoltaic = photovoltaic,
-					.battery = battery,
-					.timestamp = timestamp,
-			};
+			acknowledged = false;
 			buffer_push(&entry);
 			led_red_blink(200, 100);
 			goto sleep;
 		}
+		acknowledged = true;
 
-		if (buffer.size > 0) {
+		if (do_buffer == true && buffer.size > 0) {
 			entry_t entry;
 			if (buffer_peek(&entry) == -1) {
 				goto sleep;
@@ -121,18 +132,19 @@ int main(void) {
 				goto sleep;
 			}
 
-			uplink.kind = 0x92;
+			encode(&entry, &uplink);
 
-			uplink.data[0] = ((entry.photovoltaic >> 4) & 0xff);
-			uplink.data[1] = ((entry.photovoltaic & 0x0f) << 4) | ((entry.battery >> 8) & 0x0f);
-			uplink.data[2] = ((entry.battery >> 0) & 0xff);
-			uplink.data[3] = diff.bytes[2];
-			uplink.data[4] = diff.bytes[1];
-			uplink.data[5] = diff.bytes[0];
-			uplink.data[6] = (buffer.size >> 8) & 0xff;
-			uplink.data[7] = (buffer.size >> 0) & 0xff;
-
-			uplink.data_len = 8;
+			uplink.kind |= 0x80;
+			uplink.data[uplink.data_len] = diff.bytes[2];
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
+			uplink.data[uplink.data_len] = diff.bytes[1];
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
+			uplink.data[uplink.data_len] = diff.bytes[0];
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
+			uplink.data[uplink.data_len] = (buffer.size >> 8) & 0xff;
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
+			uplink.data[uplink.data_len] = (buffer.size >> 0) & 0xff;
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
 
 			if (transceive(&config, &uplink) == -1) {
 				led_red_blink(200, 100);
@@ -146,6 +158,26 @@ int main(void) {
 		if (sx1278_sleep() == -1) {
 			led_red_blink(200, 100);
 		}
-		timer_sleep_s(30);
+
+		if (next_reading == 0) {
+			next_reading = config.reading_interval;
+		}
+		if (next_metric == 0) {
+			next_metric = config.metric_interval;
+		}
+		if (next_buffer == 0) {
+			next_buffer = config.buffer_interval;
+		}
+
+		uint16_t interval = min16(next_reading, next_metric);
+		if (acknowledged == true && buffer.size > 0) {
+			interval = min16(interval, next_buffer);
+		}
+
+		timer_sleep_s(interval);
+
+		next_reading = sub16(next_reading, interval);
+		next_metric = sub16(next_metric, interval);
+		next_buffer = sub16(next_buffer, interval);
 	}
 }

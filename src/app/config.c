@@ -59,8 +59,18 @@ void config_read(config_t *config) {
 	config_read_blob(config->hardware, sizeof(config->hardware), &index);
 
 	config->led_red = config_read_bool(&index);
+	config->led_yellow = config_read_bool(&index);
 	config->led_green = config_read_bool(&index);
+	config->led_cyan = config_read_bool(&index);
 	config->led_blue = config_read_bool(&index);
+	config->led_purple = config_read_bool(&index);
+
+	config->reading_enable = config_read_bool(&index);
+	config->reading_interval = config_read_uint8(&index);
+	config->metric_enable = config_read_bool(&index);
+	config->metric_interval = config_read_uint8(&index);
+	config->buffer_enable = config_read_bool(&index);
+	config->buffer_interval = config_read_uint8(&index);
 
 	config->frequency = config_read_uint32(&index);
 	config->bandwidth = config_read_uint32(&index);
@@ -81,8 +91,18 @@ void config_write(config_t *config) {
 	config_write_blob(config->hardware, sizeof(config->hardware), &index);
 
 	config_write_bool(config->led_red, &index);
+	config_write_bool(config->led_yellow, &index);
 	config_write_bool(config->led_green, &index);
+	config_write_bool(config->led_cyan, &index);
 	config_write_bool(config->led_blue, &index);
+	config_write_bool(config->led_purple, &index);
+
+	config_write_bool(config->reading_enable, &index);
+	config_write_uint8(config->reading_interval, &index);
+	config_write_bool(config->metric_enable, &index);
+	config_write_uint8(config->metric_interval, &index);
+	config_write_bool(config->buffer_enable, &index);
+	config_write_uint8(config->buffer_interval, &index);
 
 	config_write_uint32(config->frequency, &index);
 	config_write_uint32(config->bandwidth, &index);
@@ -95,6 +115,18 @@ void config_write(config_t *config) {
 }
 
 int config_validate(config_t *config) {
+	if (config->reading_interval < 5 || config->reading_interval > 240) {
+		return -1;
+	}
+
+	if (config->metric_interval < 5 || config->metric_interval > 240) {
+		return -1;
+	}
+
+	if (config->buffer_interval < 5 || config->buffer_interval > 240) {
+		return -1;
+	}
+
 	if (config->frequency < 420000000 || config->frequency > 440000000) {
 		return -1;
 	}
