@@ -105,7 +105,7 @@ int sx1278_lora(void) {
 	op_mode = (op_mode & ~0x8f) | 0x88;
 	sx1278_write(sx1278_reg_op_mode, op_mode);
 
-	for (uint8_t tries = 0; tries < 5; tries++) {
+	for (uint8_t tries = 0; tries < 8; tries++) {
 		uint8_t op_mode = sx1278_read(sx1278_reg_op_mode);
 
 		if ((op_mode & 0x88) == 0x88) {
@@ -124,7 +124,7 @@ int sx1278_sleep(void) {
 	op_mode = (op_mode & ~0x07) | 0x00;
 	sx1278_write(sx1278_reg_op_mode, op_mode);
 
-	for (uint8_t tries = 0; tries < 5; tries++) {
+	for (uint8_t tries = 0; tries < 8; tries++) {
 		uint8_t op_mode = sx1278_read(sx1278_reg_op_mode);
 
 		if ((op_mode & 0x07) == 0x00) {
@@ -143,7 +143,7 @@ int sx1278_standby(void) {
 	op_mode = (op_mode & ~0x07) | 0x01;
 	sx1278_write(sx1278_reg_op_mode, op_mode);
 
-	for (uint8_t tries = 0; tries < 5; tries++) {
+	for (uint8_t tries = 0; tries < 8; tries++) {
 		uint8_t op_mode = sx1278_read(sx1278_reg_op_mode);
 
 		if ((op_mode & 0x07) == 0x01) {
