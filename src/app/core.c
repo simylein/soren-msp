@@ -59,6 +59,7 @@ int transceive(config_t *config, uplink_t *uplink) {
 		return -1;
 	}
 
+	uint16_t frame = config->frame;
 	config->frame += 1;
 
 	uint8_t rx_data[256];
@@ -79,6 +80,10 @@ int transceive(config_t *config, uplink_t *uplink) {
 	}
 
 	if (rx_data[0] != config->id[0] || rx_data[1] != config->id[1]) {
+		return -1;
+	}
+
+	if (rx_data[2] != ((frame >> 8) & 0xff) || rx_data[3] != ((frame >> 0) & 0xff)) {
 		return -1;
 	}
 
