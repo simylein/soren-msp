@@ -24,3 +24,4 @@ typedef struct config_t {
 
 void config_read(config_t *config);
 void config_write(config_t *config);
+int config_validate(config_t *config);

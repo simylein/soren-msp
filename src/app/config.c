@@ -93,3 +93,37 @@ void config_write(config_t *config) {
 	config_write_uint8(config->tx_power, &index);
 	config_write_uint8(config->sync_word, &index);
 }
+
+int config_validate(config_t *config) {
+	if (config->frequency < 420000000 || config->frequency > 440000000) {
+		return -1;
+	}
+
+	if (config->bandwidth != 7800 && config->bandwidth != 10400 && config->bandwidth != 15600 && config->bandwidth != 20800 &&
+			config->bandwidth != 31250 && config->bandwidth != 41700 && config->bandwidth != 62500 && config->bandwidth != 125000 &&
+			config->bandwidth != 250000 && config->bandwidth != 500000) {
+		return -1;
+	}
+
+	if (config->coding_rate < 5 || config->coding_rate > 8) {
+		return -1;
+	}
+
+	if (config->spreading_factor < 7 || config->spreading_factor > 12) {
+		return -1;
+	}
+
+	if (config->preamble_length < 6 || config->preamble_length > 21) {
+		return -1;
+	}
+
+	if (config->tx_power < 2 || config->tx_power > 17) {
+		return -1;
+	}
+
+	if (config->sync_word == 0x00 || config->sync_word == 0xff) {
+		return -1;
+	}
+
+	return 0;
+}

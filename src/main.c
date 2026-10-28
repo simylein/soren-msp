@@ -30,6 +30,26 @@ int main(void) {
 		led_red_blink(200, 100);
 	}
 
+	config_t config;
+	config_read(&config);
+	config.frame = 0;
+	if (config_validate(&config) == 0) {
+		led_green_blink(200, 100);
+	} else if (config.id[0] == 0xff && config.id[1] == 0xff) {
+		config.frequency = 433225000;
+		config.bandwidth = 125000;
+		config.coding_rate = 5;
+		config.spreading_factor = 7;
+		config.preamble_length = 6;
+		config.checksum = true;
+		config.tx_power = 2;
+		config.sync_word = 0x16;
+		config_write(&config);
+		led_blue_blink(2000, 100);
+	} else {
+		led_red_blink(200, 100);
+	}
+
 	if (sx1278_sleep() == 0) {
 		led_green_blink(200, 100);
 	} else {
@@ -41,10 +61,6 @@ int main(void) {
 	} else {
 		led_red_blink(200, 100);
 	}
-
-	config_t config;
-	config_read(&config);
-	config.frame = 0;
 
 	if (sx1278_lora() == -1) {
 		led_red_blink(200, 100);
