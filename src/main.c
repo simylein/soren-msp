@@ -92,6 +92,7 @@ int main(void) {
 	uint16_t next_reading = 0;
 	uint16_t next_metric = 0;
 	uint16_t next_buffer = 0;
+	uint16_t next_heartbeat = 1200;
 
 	entry_t stash[4];
 	uint8_t stash_len = 0;
@@ -203,6 +204,45 @@ int main(void) {
 			for (uint8_t index = 0; index < encoded; index++) {
 				buffer_pull();
 			}
+
+			if (buffer.size == 0) {
+				next_heartbeat = 0;
+			}
+		}
+
+		if (next_heartbeat == 0) {
+			uint32_split_t diff = {.value = 0};
+
+			entry_t entry;
+			if (buffer_peek(0, &entry) == 0) {
+				diff.value = timestamp.value - entry.timestamp.value;
+				if (diff.value > 16777215) {
+					diff.value = 16777215;
+				}
+			}
+
+			uplink_t uplink;
+			uplink.kind = 0x80;
+			uplink.data_len = 0;
+			uplink.data[uplink.data_len] = diff.bytes[2];
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
+			uplink.data[uplink.data_len] = diff.bytes[1];
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
+			uplink.data[uplink.data_len] = diff.bytes[0];
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
+			uplink.data[uplink.data_len] = (buffer.size >> 8) & 0xff;
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
+			uplink.data[uplink.data_len] = (buffer.size >> 0) & 0xff;
+			uplink.data_len += sizeof(uplink.data[uplink.data_len]);
+
+			if (sx1278_standby() == -1) {
+				led_red_blink(200, 100);
+			}
+
+			if (transceive(&config, &uplink) == -1) {
+				led_red_blink(200, 100);
+				goto sleep;
+			}
 		}
 
 	sleep:
@@ -219,8 +259,11 @@ int main(void) {
 		if (next_buffer == 0) {
 			next_buffer = config.buffer_interval;
 		}
+		if (next_heartbeat == 0) {
+			next_heartbeat = 1200;
+		}
 
-		uint16_t interval = min16(next_reading, next_metric);
+		uint16_t interval = min16(min16(next_reading, next_metric), next_heartbeat);
 		if (acknowledged == true && buffer.size > 0) {
 			interval = min16(interval, next_buffer);
 		}
@@ -230,5 +273,6 @@ int main(void) {
 		next_reading = sub16(next_reading, interval);
 		next_metric = sub16(next_metric, interval);
 		next_buffer = sub16(next_buffer, interval);
+		next_heartbeat = sub16(next_heartbeat, interval);
 	}
 }
