@@ -441,7 +441,11 @@ int sx1278_receive(uint8_t *data, uint8_t *length, uint16_t timeout, bool *crc_u
 			led_green_on();
 			break;
 		}
+		if (timeout == 0) {
+			return -1;
+		}
 		timer_sleep_ms(1);
+		timeout--;
 	}
 
 	uint8_t irq_flags;
