@@ -1,5 +1,6 @@
 #include "core.h"
 #include "config.h"
+#include "math.h"
 #include "sx1278.h"
 #include <stdint.h>
 #include <string.h>
@@ -55,7 +56,7 @@ int transceive(config_t *config, uplink_t *uplink) {
 		tx_data_len += sizeof(tx_data[tx_data_len]);
 	}
 
-	if (sx1278_transmit(tx_data, tx_data_len, 512) == -1) {
+	if (sx1278_transmit(tx_data, tx_data_len, calculate_airtime(config, tx_data_len) + 16) == -1) {
 		return -1;
 	}
 
@@ -67,7 +68,7 @@ int transceive(config_t *config, uplink_t *uplink) {
 	bool crc_used = false;
 	bool crc_fail = false;
 
-	if (sx1278_receive(rx_data, &rx_data_len, 512, &crc_used, &crc_fail) == -1) {
+	if (sx1278_receive(rx_data, &rx_data_len, calculate_airtime(config, 16) + 16, &crc_used, &crc_fail) == -1) {
 		return -1;
 	}
 
