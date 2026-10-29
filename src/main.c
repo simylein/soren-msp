@@ -36,7 +36,7 @@ int main(void) {
 	config.frame = 0;
 	if (config_validate(&config) == 0) {
 		led_green_blink(200, 100);
-	} else if (config.id[0] == 0xff && config.id[1] == 0xff) {
+	} else {
 		config.reading_enable = true;
 		config.reading_interval = 60;
 		config.metric_enable = true;
@@ -55,8 +55,6 @@ int main(void) {
 		config.sync_word = 0x16;
 		config_write(&config);
 		led_blue_blink(2000, 100);
-	} else {
-		led_red_blink(200, 100);
 	}
 
 	if (sx1278_sleep() == 0) {
