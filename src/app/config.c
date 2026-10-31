@@ -118,6 +118,40 @@ void config_write(config_t *config) {
 	config_write_uint8(config->sync_word, &index);
 }
 
+void config_default(config_t *config) {
+	config->id[0] = 0xff;
+	config->id[1] = 0xff;
+
+	for (uint8_t index = 0; index < sizeof(config->key); index++) {
+		config->key[index] = 0xff;
+	}
+
+	config->led_red = true;
+	config->led_yellow = true;
+	config->led_green = true;
+	config->led_cyan = true;
+	config->led_blue = true;
+	config->led_purple = true;
+
+	config->reading_enable = true;
+	config->reading_interval = 60;
+	config->metric_enable = true;
+	config->metric_interval = 60;
+	config->buffer_enable = true;
+	config->buffer_interval = 30;
+	config->live_batch = 1;
+	config->buffer_batch = 1;
+
+	config->frequency = 433225000;
+	config->bandwidth = 125000;
+	config->coding_rate = 5;
+	config->spreading_factor = 7;
+	config->preamble_length = 6;
+	config->checksum = true;
+	config->tx_power = 2;
+	config->sync_word = 0x16;
+}
+
 int config_validate(config_t *config) {
 	if (config->reading_interval < 5 || config->reading_interval > 240) {
 		return -1;

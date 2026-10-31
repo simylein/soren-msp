@@ -39,22 +39,7 @@ int main(void) {
 	if (config_validate(&config) == 0) {
 		led_green_blink(200, 100);
 	} else {
-		config.reading_enable = true;
-		config.reading_interval = 60;
-		config.metric_enable = true;
-		config.metric_interval = 60;
-		config.buffer_enable = true;
-		config.buffer_interval = 30;
-		config.live_batch = 1;
-		config.buffer_batch = 1;
-		config.frequency = 433225000;
-		config.bandwidth = 125000;
-		config.coding_rate = 5;
-		config.spreading_factor = 7;
-		config.preamble_length = 6;
-		config.checksum = true;
-		config.tx_power = 2;
-		config.sync_word = 0x16;
+		config_default(&config);
 		config_write(&config);
 		led_blue_blink(2000, 100);
 	}
