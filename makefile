@@ -1,6 +1,8 @@
 cc = arch -x86_64 msp430-elf-gcc
 
 flags = -mmcu=msp430fr5994
+flags += -O0
+flags += -flto
 flags += -nostdlib
 flags += -nostartfiles
 flags += -T linker.ld
