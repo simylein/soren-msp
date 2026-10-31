@@ -19,6 +19,7 @@ int main(void) {
 	rtc_init();
 	timer_init();
 	led_init();
+	sht45_init();
 	adc49_init();
 	sx1278_init();
 	buffer_init();
