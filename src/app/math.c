@@ -16,6 +16,42 @@ uint16_t sub16(uint16_t alpha, uint16_t bravo) {
 	return alpha - bravo;
 }
 
+uint32_split_t add32(uint32_split_t alpha, uint32_split_t bravo) {
+	uint32_split_t result;
+
+	result.words[0] = (uint16_t)(alpha.words[0] + bravo.words[0]);
+	result.words[1] = (uint16_t)(alpha.words[1] + bravo.words[1] + (result.words[0] < alpha.words[0]));
+
+	return result;
+}
+
+uint32_split_t xor32(uint32_split_t alpha, uint32_split_t bravo) {
+	uint32_split_t result;
+
+	result.words[0] = alpha.words[0] ^ bravo.words[0];
+	result.words[1] = alpha.words[1] ^ bravo.words[1];
+
+	return result;
+}
+
+uint32_split_t sl4(uint32_split_t value) {
+	uint32_split_t result;
+
+	result.words[0] = (uint16_t)(value.words[0] << 4);
+	result.words[1] = (uint16_t)((value.words[1] << 4) | (value.words[0] >> 12));
+
+	return result;
+}
+
+uint32_split_t sr5(uint32_split_t value) {
+	uint32_split_t result;
+
+	result.words[0] = (uint16_t)((value.words[0] >> 5) | (value.words[1] << 11));
+	result.words[1] = (uint16_t)(value.words[1] >> 5);
+
+	return result;
+}
+
 const uint8_t bit_masks[8] = {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 
 uint32_t divide_32(uint32_t numerator, uint32_t denominator) {

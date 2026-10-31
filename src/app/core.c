@@ -1,6 +1,7 @@
 #include "core.h"
 #include "config.h"
 #include "math.h"
+#include "ssc128.h"
 #include "sx1278.h"
 #include <stdint.h>
 #include <string.h>
@@ -35,6 +36,8 @@ int configure(config_t *config) {
 }
 
 int transceive(config_t *config, uplink_t *uplink) {
+	uint16_t frame = config->frame;
+
 	uint8_t tx_data[256];
 	uint8_t tx_data_len = 0;
 
@@ -56,11 +59,12 @@ int transceive(config_t *config, uplink_t *uplink) {
 		tx_data_len += sizeof(tx_data[tx_data_len]);
 	}
 
+	ssc128_encrypt(&tx_data[6], tx_data_len - 6, frame, &config->key);
+
 	if (sx1278_transmit(tx_data, tx_data_len, calculate_airtime(config, tx_data_len) + 16) == -1) {
 		return -1;
 	}
 
-	uint16_t frame = config->frame;
 	config->frame += 1;
 
 	uint8_t rx_data[256];
@@ -87,6 +91,8 @@ int transceive(config_t *config, uplink_t *uplink) {
 	if (rx_data[2] != ((frame >> 8) & 0xff) || rx_data[3] != ((frame >> 0) & 0xff)) {
 		return -1;
 	}
+
+	ssc128_decrypt(&rx_data[6], rx_data_len - 6, frame, &config->key);
 
 	return 0;
 }

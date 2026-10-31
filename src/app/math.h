@@ -12,6 +12,12 @@ typedef union uint32_split_t {
 uint16_t min16(uint16_t alpha, uint16_t bravo);
 uint16_t sub16(uint16_t alpha, uint16_t bravo);
 
+uint32_split_t add32(uint32_split_t alpha, uint32_split_t bravo);
+uint32_split_t xor32(uint32_split_t alpha, uint32_split_t bravo);
+
+uint32_split_t sl4(uint32_split_t value);
+uint32_split_t sr5(uint32_split_t value);
+
 uint32_t divide_15625(uint32_t value, uint16_t *rem);
 uint32_t calculate_frf(uint32_t frequency);
 uint16_t calculate_airtime(config_t *config, uint8_t payload_len);
