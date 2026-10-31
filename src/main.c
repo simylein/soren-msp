@@ -7,6 +7,7 @@
 #include "app/msp430.h"
 #include "app/proto.h"
 #include "app/rtc.h"
+#include "app/sht45.h"
 #include "app/sx1278.h"
 #include "app/timer.h"
 #include <stdbool.h>
@@ -105,7 +106,11 @@ int main(void) {
 			entry_t entry = {.flags = 0x00, .timestamp = timestamp};
 
 			if (do_reading == true) {
-				entry.flags |= 0x01;
+				if (sht45_read(&entry.temperature, &entry.humidity) == 0) {
+					entry.flags |= 0x01;
+				} else {
+					led_red_blink(200, 100);
+				}
 			}
 
 			if (do_metric == true) {
