@@ -122,7 +122,9 @@ int main(void) {
 				}
 			}
 
-			stash[stash_len++] = entry;
+			if (entry.flags != 0x00) {
+				stash[stash_len++] = entry;
+			}
 		}
 
 		if (stash_len >= config.live_batch) {
