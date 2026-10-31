@@ -114,9 +114,11 @@ int main(void) {
 			}
 
 			if (do_metric == true) {
-				entry.flags |= 0x02;
-				entry.photovoltaic = adc49_photovoltaic();
-				entry.battery = adc49_battery();
+				if (adc49_read(&entry.photovoltaic, &entry.battery) == 0) {
+					entry.flags |= 0x02;
+				} else {
+					led_red_blink(200, 100);
+				}
 			}
 
 			stash[stash_len++] = entry;

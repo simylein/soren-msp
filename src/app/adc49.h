@@ -4,5 +4,4 @@
 
 void adc49_init(void);
 
-uint16_t adc49_photovoltaic(void);
-uint16_t adc49_battery(void);
+int adc49_read(uint16_t *photovoltaic, uint16_t *battery);
