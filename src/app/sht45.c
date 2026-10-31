@@ -54,6 +54,42 @@ void i2c_stop(void) {
 	i2c_delay();
 }
 
+int i2c_read(uint8_t *value, uint8_t ack) {
+	uint8_t data = 0;
+	p5dir &= ~i2c_sda;
+
+	for (uint8_t bit = 0; bit < 8; bit++) {
+		data <<= 1;
+		i2c_delay();
+
+		if (scl_high() != 0) {
+			return -1;
+		}
+		if (p5in & i2c_sda) {
+			data |= 1;
+		}
+
+		p5dir |= i2c_scl;
+	}
+
+	if (ack) {
+		p5dir |= i2c_sda;
+	} else {
+		p5dir &= ~i2c_sda;
+	}
+
+	i2c_delay();
+	if (scl_high() != 0) {
+		return -1;
+	}
+
+	p5dir |= i2c_scl;
+	p5dir &= ~i2c_sda;
+
+	*value = data;
+	return 0;
+}
+
 int i2c_write(uint8_t data) {
 	for (uint8_t bit = 0; bit < 8; bit++) {
 
@@ -93,42 +129,6 @@ int i2c_write(uint8_t data) {
 	i2c_delay();
 
 	return ack;
-}
-
-int i2c_read(uint8_t *value, uint8_t ack) {
-	uint8_t data = 0;
-	p5dir &= ~i2c_sda;
-
-	for (uint8_t bit = 0; bit < 8; bit++) {
-		data <<= 1;
-		i2c_delay();
-
-		if (scl_high() != 0) {
-			return -1;
-		}
-		if (p5in & i2c_sda) {
-			data |= 1;
-		}
-
-		p5dir |= i2c_scl;
-	}
-
-	if (ack) {
-		p5dir |= i2c_sda;
-	} else {
-		p5dir &= ~i2c_sda;
-	}
-
-	i2c_delay();
-	if (scl_high() != 0) {
-		return -1;
-	}
-
-	p5dir |= i2c_scl;
-	p5dir &= ~i2c_sda;
-
-	*value = data;
-	return 0;
 }
 
 uint8_t crc8(uint8_t *bytes) {
