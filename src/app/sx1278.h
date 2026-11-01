@@ -24,3 +24,4 @@ int sx1278_sync_word(uint8_t word);
 
 int sx1278_transmit(uint8_t *data, uint8_t length, uint16_t timeout);
 int sx1278_receive(uint8_t *data, uint8_t *length, uint16_t timeout, bool *crc_used, bool *crc_fail);
+int sx1278_listen(uint16_t timeout);

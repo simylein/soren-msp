@@ -169,6 +169,19 @@ int sx1278_tx(void) {
 	return 0;
 }
 
+int sx1278_cad(void) {
+	uint8_t op_mode = sx1278_read(sx1278_reg_op_mode);
+	op_mode = ((op_mode & ~0x07) | 0x07);
+
+	sx1278_write(sx1278_reg_op_mode, op_mode);
+
+	if (sx1278_read(sx1278_reg_op_mode) != op_mode) {
+		return -1;
+	}
+
+	return 0;
+}
+
 int sx1278_rx(void) {
 	uint8_t op_mode = sx1278_read(sx1278_reg_op_mode);
 	op_mode = ((op_mode & ~0x07) | 0x06);
@@ -490,4 +503,38 @@ int sx1278_receive(uint8_t *data, uint8_t *length, uint16_t timeout, bool *crc_u
 	}
 
 	return 0;
+}
+
+int sx1278_listen(uint16_t timeout) {
+	if (sx1278_cad() == -1) {
+		return -1;
+	}
+
+	uint8_t irq_flags;
+	while (true) {
+		irq_flags = sx1278_read(sx1278_reg_irq_flags);
+		if (irq_flags & 0x04) {
+			break;
+		}
+		if (timeout == 0) {
+			return -1;
+		}
+		timer_sleep_ms(1);
+		timeout--;
+	}
+
+	int status;
+	if (irq_flags & 0x01) {
+		status = 1;
+	} else {
+		status = 0;
+	}
+
+	sx1278_write(sx1278_reg_irq_flags, 0xff);
+
+	if ((sx1278_read(sx1278_reg_irq_flags) & 0xff) != 0x00) {
+		return -1;
+	}
+
+	return status;
 }

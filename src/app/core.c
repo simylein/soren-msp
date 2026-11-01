@@ -3,6 +3,7 @@
 #include "math.h"
 #include "ssc128.h"
 #include "sx1278.h"
+#include "timer.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -60,6 +61,28 @@ int transceive(config_t *config, uplink_t *uplink) {
 	}
 
 	ssc128_encrypt(&tx_data[6], tx_data_len - 6, frame, &config->key);
+
+	uint8_t listens = 0;
+	uint16_t duration = calculate_airtime(config, 0) / 2;
+
+	while (true) {
+		int result = sx1278_listen(duration);
+		if (result == -1) {
+			return -1;
+		}
+
+		if (result == 1) {
+			timer_sleep_ms(duration);
+		} else {
+			break;
+		}
+
+		listens++;
+
+		if (listens >= 4) {
+			return -1;
+		}
+	}
 
 	if (sx1278_transmit(tx_data, tx_data_len, calculate_airtime(config, tx_data_len) + 16) == -1) {
 		return -1;
