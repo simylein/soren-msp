@@ -4,6 +4,7 @@
 #include "ssc128.h"
 #include "sx1278.h"
 #include "timer.h"
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -54,13 +55,15 @@ int transceive(config_t *config, uplink_t *uplink) {
 	tx_data_len += sizeof(tx_data[tx_data_len]);
 	tx_data[tx_data_len] = uplink->kind;
 	tx_data_len += sizeof(tx_data[tx_data_len]);
+	tx_data_len += sizeof(uint16_t);
 
 	for (uint8_t index = 0; index < uplink->data_len; index++) {
 		tx_data[tx_data_len] = uplink->data[index];
 		tx_data_len += sizeof(tx_data[tx_data_len]);
 	}
 
-	ssc128_encrypt(&tx_data[6], tx_data_len - 6, frame, &config->key);
+	ssc128_encrypt(&tx_data[8], tx_data_len - 8, &config->id, frame, tx_data[5], tx_data[4], 0x55, (uint8_t (*)[2])(&tx_data[6]),
+								 &config->key);
 
 	uint8_t listens = 0;
 	uint16_t duration = calculate_airtime(config, 0) / 2;
@@ -103,7 +106,7 @@ int transceive(config_t *config, uplink_t *uplink) {
 		return -1;
 	}
 
-	if (rx_data_len < 6) {
+	if (rx_data_len < 8) {
 		return -1;
 	}
 
@@ -115,7 +118,13 @@ int transceive(config_t *config, uplink_t *uplink) {
 		return -1;
 	}
 
-	ssc128_decrypt(&rx_data[6], rx_data_len - 6, frame, &config->key);
+	bool mic_fail = false;
+	ssc128_decrypt(&rx_data[8], rx_data_len - 8, &config->id, frame, rx_data[5], rx_data[4], 0xaa, (uint8_t (*)[2])(&rx_data[6]),
+								 &config->key, &mic_fail);
+
+	if (mic_fail == true) {
+		return -1;
+	}
 
 	return 0;
 }
