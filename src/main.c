@@ -199,7 +199,7 @@ int main(void) {
 			}
 
 			if (buffer.size == 0) {
-				next_heartbeat = 0;
+				next_heartbeat = config.buffer_interval;
 			}
 		}
 
